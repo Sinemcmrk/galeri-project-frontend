@@ -1,0 +1,175 @@
+.container {
+  width: 100%;
+  background-color: var(--bg-primary);
+  min-height: 80vh;
+}
+
+.headerBanner {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  padding: 4rem 1.5rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.headerBanner h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+.headerBanner p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 6rem 1.5rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  max-width: 600px;
+  margin: 0 auto;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.emptyState svg {
+  color: var(--text-muted);
+}
+
+.emptyState h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.emptyState p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.goBtn {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  padding: 0.75rem 1.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.goBtn:hover {
+  background-color: var(--accent-hover);
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+}
+
+/* Table Wrapper */
+.tableWrapper {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.compareTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.compareTable th, .compareTable td {
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 0.95rem;
+}
+
+.compareTable th {
+  background-color: rgba(248, 250, 252, 0.5);
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.carHeader {
+  position: relative;
+  width: 25%;
+  vertical-align: top;
+}
+
+.removeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(225, 29, 72, 0.1);
+  color: var(--accent-color);
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.75rem;
+  transition: var(--transition);
+  z-index: 5;
+}
+
+.removeBtn:hover {
+  background-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.carImg {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  margin-bottom: 0.75rem;
+}
+
+.carHeader h3 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.compareTable td {
+  color: var(--text-secondary);
+}
+
+.compareTable tr:hover td {
+  background-color: rgba(248, 250, 252, 0.3);
+}
+
+.compareTable tr:last-child td {
+  border-bottom: none;
+}
+
+.price {
+  color: var(--accent-color) !important;
+  font-weight: 800;
+  font-size: 1.1rem !important;
+}
+
+@media (max-width: 768px) {
+  .tableWrapper {
+    overflow-x: auto;
+  }
+}
