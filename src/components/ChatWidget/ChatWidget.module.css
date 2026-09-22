@@ -1,0 +1,153 @@
+.card {
+  max-width: 800px;
+  margin-top: 2.5rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.9rem;
+}
+
+.hint {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  margin-bottom: 0.75rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.85rem;
+}
+
+.row input,
+.form textarea,
+.replyForm input {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+}
+
+.row input:focus,
+.form textarea:focus,
+.replyForm input:focus {
+  border-color: var(--accent-color);
+}
+
+.form button,
+.replyForm button {
+  background-color: var(--accent-color);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  align-self: flex-start;
+}
+
+.form button:hover,
+.replyForm button:hover {
+  background-color: var(--accent-hover);
+}
+
+.form button:disabled,
+.replyForm button:disabled {
+  background-color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.errorAlert {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.errorAlert svg {
+  flex-shrink: 0;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 320px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  padding-right: 0.25rem;
+}
+
+.message {
+  max-width: 75%;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.88rem;
+}
+
+.message p {
+  line-height: 1.5;
+}
+
+.message span {
+  display: block;
+  font-size: 0.68rem;
+  margin-top: 0.3rem;
+  opacity: 0.75;
+}
+
+.fromVisitor {
+  align-self: flex-start;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-top-left-radius: 0;
+}
+
+.fromAdmin {
+  align-self: flex-end;
+  background-color: var(--accent-color);
+  color: #fff;
+  border-top-right-radius: 0;
+  margin-left: auto;
+}
+
+.replyForm {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.replyForm input {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .row {
+    flex-direction: column;
+  }
+}

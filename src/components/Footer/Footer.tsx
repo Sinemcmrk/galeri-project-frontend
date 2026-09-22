@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
             <h4>Kategoriler</h4>
             <ul>
               <li><Link href="/cars?bodyType=Coupe">Coupe İlanları</Link></li>
-              <li><Link href="/cars?bodyType=Sports">Hiper Spor Araçlar</Link></li>
+              <li><Link href="/cars?bodyType=Sports+Car">Hiper Spor Araçlar</Link></li>
               <li><Link href="/cars?bodyType=SUV">Premium SUV</Link></li>
               <li><Link href="/cars?type=RENT">Kiralık Otomobiller</Link></li>
             </ul>

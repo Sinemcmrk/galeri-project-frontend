@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import styles from './register.module.css';
+import { API_BASE_URL } from '@/lib/listings';
+import { getSession, saveSession } from '@/lib/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -14,6 +17,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Already logged in? No need to see the registration form again.
+  useEffect(() => {
+    const session = getSession();
+    if (session) {
+      router.replace(session.user.role === 'ADMIN' ? '/dashboard' : '/');
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,17 +45,29 @@ export default function RegisterPage() {
     }
 
     try {
-      // Typically backend sign up would point to an endpoint like POST /api/auth/register
-      // But in this project, only admin credentials might be seeded. Let's mock a successful registration
-      // saving it in localStorage and automatically redirecting to login.
-      setSuccessMsg('Kayıt başarılı! Giriş sayfasına yönlendiriliyorsunuz...');
-      
-      setTimeout(() => {
-        router.push('/login');
-      }, 2000);
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name, email, password })
+      });
 
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        saveSession(json.data);
+        setSuccessMsg('Kayıt başarılı! Ana sayfaya yönlendiriliyorsunuz...');
+
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
+      } else {
+        setErrorMsg(json.message || 'Kayıt sırasında bir hata oluştu.');
+      }
     } catch (err) {
-      setErrorMsg('Kayıt sırasında bir hata oluştu.');
+      console.error(err);
+      setErrorMsg('Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -66,51 +89,51 @@ export default function RegisterPage() {
           <p>Yeni bir müşteri hesabı oluşturun.</p>
         </div>
 
-        {successMsg && <div className={styles.successAlert}>✅ {successMsg}</div>}
-        {errorMsg && <div className={styles.errorAlert}>❌ {errorMsg}</div>}
+        {successMsg && <div className={styles.successAlert}><CheckCircle2 size={16} /> {successMsg}</div>}
+        {errorMsg && <div className={styles.errorAlert}><XCircle size={16} /> {errorMsg}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label>Adınız Soyadınız *</label>
-            <input 
-              type="text" 
-              placeholder="Örn: Ahmet Yılmaz" 
-              value={name} 
-              onChange={e => setName(e.target.value)} 
-              required 
+            <input
+              type="text"
+              placeholder="Örn: Ahmet Yılmaz"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
             />
           </div>
 
           <div className={styles.formGroup}>
             <label>E-posta Adresi *</label>
-            <input 
-              type="email" 
-              placeholder="Örn: ahmet@example.com" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
+            <input
+              type="email"
+              placeholder="Örn: ahmet@example.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
             />
           </div>
 
           <div className={styles.formGroup}>
             <label>Şifre *</label>
-            <input 
-              type="password" 
-              placeholder="En az 6 karakter" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              required 
+            <input
+              type="password"
+              placeholder="En az 6 karakter"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
             />
           </div>
 
           <div className={styles.formGroup}>
             <label>Şifre Tekrar *</label>
-            <input 
-              type="password" 
-              placeholder="Şifrenizi tekrar girin" 
-              value={confirmPassword} 
-              onChange={e => setConfirmPassword(e.target.value)} 
-              required 
+            <input
+              type="password"
+              placeholder="Şifrenizi tekrar girin"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              required
             />
           </div>
 

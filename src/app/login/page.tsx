@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import styles from './login.module.css';
+import { API_BASE_URL } from '@/lib/listings';
+import { getSession, saveSession } from '@/lib/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,6 +16,14 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Already logged in? No need to see the login form again.
+  useEffect(() => {
+    const session = getSession();
+    if (session) {
+      router.replace(session.user.role === 'ADMIN' ? '/dashboard' : '/');
+    }
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -20,7 +31,7 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch('http://localhost:6000/api/auth/login', {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -31,33 +42,18 @@ export default function LoginPage() {
       const json = await res.json();
 
       if (res.ok && json.success) {
-        setSuccessMsg('Giriş başarılı! Yönetim paneline yönlendiriliyorsunuz...');
-        // Save user to localStorage for client side state
-        localStorage.setItem('user_session', JSON.stringify(json.data.user));
-        
+        saveSession(json.data);
+        setSuccessMsg('Giriş başarılı! Yönlendiriliyorsunuz...');
+
         setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
+          router.push(json.data.user.role === 'ADMIN' ? '/dashboard' : '/');
+        }, 1000);
       } else {
-        setErrorMsg(json.error?.message || 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
+        setErrorMsg(json.message || 'Giriş yapılamadı. Lütfen bilgilerinizi kontrol edin.');
       }
     } catch (err) {
       console.error(err);
-      // Client-side mock login fallback for development when backend connection is unavailable
-      if (email === 'admin@galeriproject.com' && password === 'admin123456') {
-        setSuccessMsg('Çevrimdışı giriş başarılı! Yönetim paneline yönlendiriliyorsunuz...');
-        localStorage.setItem('user_session', JSON.stringify({
-          id: 'admin-offline',
-          email: 'admin@galeriproject.com',
-          name: 'System Admin',
-          role: 'ADMIN'
-        }));
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
-      } else {
-        setErrorMsg('Sunucu bağlantısı kurulamadı. Giriş bilgilerinizi kontrol edin.');
-      }
+      setErrorMsg('Sunucuya bağlanılamadı. Lütfen daha sonra tekrar deneyin.');
     } finally {
       setLoading(false);
     }
@@ -76,32 +72,32 @@ export default function LoginPage() {
             <span>Car</span>Spot
           </Link>
           <h2>Giriş Yap</h2>
-          <p>Yönetici hesabı bilgilerinizi kullanarak oturum açın.</p>
+          <p>Hesabınıza giriş yapmak için bilgilerinizi girin.</p>
         </div>
 
-        {successMsg && <div className={styles.successAlert}>✅ {successMsg}</div>}
-        {errorMsg && <div className={styles.errorAlert}>❌ {errorMsg}</div>}
+        {successMsg && <div className={styles.successAlert}><CheckCircle2 size={16} /> {successMsg}</div>}
+        {errorMsg && <div className={styles.errorAlert}><XCircle size={16} /> {errorMsg}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label>E-posta Adresi</label>
-            <input 
-              type="email" 
-              placeholder="Örn: admin@galeriproject.com" 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
-              required 
+            <input
+              type="email"
+              placeholder="Örn: admin@galeriproject.com"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
             />
           </div>
 
           <div className={styles.formGroup}>
             <label>Şifre</label>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              required 
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
             />
           </div>
 

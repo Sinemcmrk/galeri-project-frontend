@@ -1,32 +1,18 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { MapPin, Fuel, Gauge, Zap, Cog, Heart, ArrowLeftRight, Frown, X } from 'lucide-react';
 import styles from './page.module.css';
-
-interface Listing {
-  id: string;
-  title: string;
-  description: string;
-  price: number | string | null;
-  type: 'SALE' | 'RENT';
-  brand: string | null;
-  modelName: string | null;
-  year: number | null;
-  color: string | null;
-  fuel: string | null;
-  gear: string | null;
-  km: number | null;
-  enginePower: number | null;
-  engineCapacity: number | null;
-  bodyType: string | null;
-  photos: string[];
-}
+import { Listing, API_BASE_URL, FALLBACK_LISTINGS, getLocalListings, getImageUrl, getCompareList, saveCompareList, MAX_COMPARE } from '@/lib/listings';
+import Select from '@/components/Select/Select';
+import PhotoCarousel from '@/components/PhotoCarousel/PhotoCarousel';
 
 export default function Home() {
+  const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
-  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   // Search and Filter States
   const [searchTab, setSearchTab] = useState<'condition' | 'bodyType'>('condition');
@@ -48,98 +34,19 @@ export default function Home() {
     async function fetchListings() {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:6000/api/listings');
+        const res = await fetch(`${API_BASE_URL}/api/listings`);
         if (!res.ok) {
           throw new Error('Failed to fetch from backend API');
         }
         const json = await res.json();
         if (json.success && json.data) {
-          let allListings = json.data;
-          const local = localStorage.getItem('local_listings_cars');
-          if (local) {
-            try {
-              const parsedLocal = JSON.parse(local);
-              allListings = [...parsedLocal, ...allListings];
-            } catch (e) {
-              console.error(e);
-            }
-          }
-          setListings(allListings);
-          setFilteredListings(allListings);
+          setListings([...getLocalListings(), ...json.data]);
         } else {
           throw new Error('API response was unsuccessful');
         }
       } catch (err) {
         console.warn('Backend fetch failed, using fallback static data.', err);
-        // Fallback static data matching database seed exactly
-        const fallbackData: Listing[] = [
-          {
-            id: 'porsche-911-fallback',
-            title: 'Porsche 911 Carrera 2017',
-            description: 'Kusursuz kondisyonda, tüm bakımları zamanında yapılmış Porsche 911 Carrera. Eşsiz sürüş deneyimi ve lüks tasarımıyla yeni sahibini bekliyor.',
-            price: 420000,
-            type: 'SALE',
-            brand: 'Porsche',
-            modelName: '911 Carrera',
-            year: 2017,
-            color: 'Kırmızı',
-            fuel: 'Benzin',
-            gear: 'Otomatik',
-            km: 35000,
-            enginePower: 370,
-            engineCapacity: 3000,
-            bodyType: 'Coupe',
-            photos: ['/uploads/images/porsche_911.jpg'],
-          },
-          {
-            id: 'shelby-gt500-fallback',
-            title: '2014 Ford Shelby GT500 Coupe',
-            description: 'Amerikan kası efsanesi Ford Shelby GT500. Supercharged motor, şeritli özel tasarım ve yüksek performanslı sürüş dinamikleri.',
-            price: 117000,
-            type: 'SALE',
-            brand: 'Ford',
-            modelName: 'Shelby GT500',
-            year: 2014,
-            color: 'Mavi',
-            fuel: 'Benzin',
-            gear: 'Manuel',
-            km: 35000,
-            enginePower: 662,
-            engineCapacity: 5800,
-            bodyType: 'Coupe',
-            photos: ['/uploads/images/shelby_gt500.jpg'],
-          },
-          {
-            id: 'mclaren-f1-fallback',
-            title: 'McLaren F1 Sports Car',
-            description: 'Efsanevi hiper otomobil McLaren F1. Sadece sınırlı sayıda üretilmiş, koleksiyonluk değerde ve kusursuz kondisyonda.',
-            price: 77000,
-            type: 'SALE',
-            brand: 'McLaren',
-            modelName: 'F1',
-            year: 1996,
-            color: 'Gümüş',
-            fuel: 'Benzin',
-            gear: 'Manuel',
-            km: 35000,
-            enginePower: 618,
-            engineCapacity: 6100,
-            bodyType: 'Sports Car',
-            photos: ['/uploads/images/mclaren_f1.jpg'],
-          }
-        ];
-        let allListings = fallbackData;
-        const local = localStorage.getItem('local_listings_cars');
-        if (local) {
-          try {
-            const parsedLocal = JSON.parse(local);
-            allListings = [...parsedLocal, ...allListings];
-          } catch (e) {
-            console.error(e);
-          }
-        }
-        setListings(allListings);
-        setFilteredListings(allListings);
+        setListings([...getLocalListings(), ...FALLBACK_LISTINGS]);
       } finally {
         setLoading(false);
       }
@@ -148,7 +55,17 @@ export default function Home() {
     fetchListings();
   }, []);
 
-  // Load favorites on mount
+  // Brand options derived from whatever is currently loaded, instead of a hardcoded list
+  const dynamicBrands = useMemo(
+    () => Array.from(new Set(listings.map(l => l.brand).filter(Boolean))).sort() as string[],
+    [listings]
+  );
+  const dynamicYears = useMemo(
+    () => Array.from(new Set(listings.map(l => l.year).filter(Boolean))).sort((a, b) => (b as number) - (a as number)) as number[],
+    [listings]
+  );
+
+  // Load favorites and any previously started comparison on mount
   useEffect(() => {
     const saved = localStorage.getItem('favorites_cars');
     if (saved) {
@@ -158,40 +75,28 @@ export default function Home() {
         console.error(e);
       }
     }
+    const compare = getCompareList();
+    setCompareList(compare);
+    setShowCompareDrawer(compare.length > 0);
   }, []);
 
-  // Handle Search Execution
+  // Handle Search Execution: navigate to the full catalogue page with the
+  // selected filters applied, where pagination/sorting are also available.
   const handleSearch = () => {
-    let result = [...listings];
-
-    if (keyword.trim() !== '') {
-      const kw = keyword.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.title.toLowerCase().includes(kw) ||
-          c.description.toLowerCase().includes(kw) ||
-          (c.brand && c.brand.toLowerCase().includes(kw)) ||
-          (c.modelName && c.modelName.toLowerCase().includes(kw))
-      );
-    }
-
-    if (selectedBrand !== 'Any') {
-      result = result.filter((c) => c.brand === selectedBrand);
-    }
-
+    const params = new URLSearchParams();
+    if (keyword.trim()) params.set('search', keyword.trim());
+    if (selectedBrand !== 'Any') params.set('brand', selectedBrand);
     if (selectedYear !== 'Any') {
-      result = result.filter((c) => c.year === parseInt(selectedYear));
+      params.set('minYear', selectedYear);
+      params.set('maxYear', selectedYear);
     }
-
-    if (selectedType !== 'Any') {
-      result = result.filter((c) => c.type === selectedType);
-    }
-
-    setFilteredListings(result);
+    if (selectedType !== 'Any') params.set('type', selectedType);
+    router.push(`/cars${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   // Toggle Favorite
   const toggleFavorite = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     let updated;
     if (favorites.includes(id)) {
@@ -205,6 +110,7 @@ export default function Home() {
 
   // Toggle Comparison
   const toggleCompare = (car: Listing, e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     const exists = compareList.find((c) => c.id === car.id);
     let updated;
@@ -212,24 +118,16 @@ export default function Home() {
     if (exists) {
       updated = compareList.filter((c) => c.id !== car.id);
     } else {
-      if (compareList.length >= 3) {
-        alert('En fazla 3 aracı karşılaştırabilirsiniz.');
+      if (compareList.length >= MAX_COMPARE) {
+        alert(`En fazla ${MAX_COMPARE} aracı karşılaştırabilirsiniz.`);
         return;
       }
       updated = [...compareList, car];
     }
 
     setCompareList(updated);
+    saveCompareList(updated);
     setShowCompareDrawer(updated.length > 0);
-  };
-
-  const getImageUrl = (photoPath: string | undefined) => {
-    if (!photoPath) return '/images/hero_bg.jpg';
-    if (photoPath.startsWith('/uploads/images/')) {
-      const filename = photoPath.replace('/uploads/images/', '');
-      return `/images/${filename}`;
-    }
-    return photoPath;
   };
 
   return (
@@ -277,37 +175,33 @@ export default function Home() {
               {/* Brand Select */}
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Marka Seçin</label>
-                <select 
+                <Select
                   className={styles.formSelect}
                   value={selectedBrand}
                   onChange={(e) => setSelectedBrand(e.target.value)}
                 >
                   <option value="Any">Tüm Markalar</option>
-                  <option value="Porsche">Porsche</option>
-                  <option value="Ford">Ford</option>
-                  <option value="McLaren">McLaren</option>
-                </select>
+                  {dynamicBrands.map((b) => <option key={b} value={b}>{b}</option>)}
+                </Select>
               </div>
 
               {/* Year Select */}
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Yıl Seçin</label>
-                <select 
+                <Select
                   className={styles.formSelect}
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
                 >
                   <option value="Any">Tüm Yıllar</option>
-                  <option value="2017">2017</option>
-                  <option value="2014">2014</option>
-                  <option value="1996">1996</option>
-                </select>
+                  {dynamicYears.map((y) => <option key={y} value={y}>{y}</option>)}
+                </Select>
               </div>
 
               {/* Listing Type Select */}
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>İlan Tipi</label>
-                <select 
+                <Select
                   className={styles.formSelect}
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
@@ -315,7 +209,7 @@ export default function Home() {
                   <option value="Any">Tüm Tipler</option>
                   <option value="SALE">Satılık</option>
                   <option value="RENT">Kiralık</option>
-                </select>
+                </Select>
               </div>
 
               {/* Search Button */}
@@ -345,42 +239,23 @@ export default function Home() {
             <div className={styles.spinner}></div>
             <p>Yükleniyor...</p>
           </div>
-        ) : filteredListings.length === 0 ? (
+        ) : listings.length === 0 ? (
           <div className={styles.noResults}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
-            <p>Aradığınız kriterlere uygun araç bulunamadı.</p>
-            <button 
-              className={styles.resetBtn}
-              onClick={() => {
-                setKeyword('');
-                setSelectedBrand('Any');
-                setSelectedYear('Any');
-                setSelectedType('Any');
-                setFilteredListings(listings);
-              }}
-            >
-              Filtreleri Temizle
-            </button>
+            <Frown size={44} strokeWidth={1.5} />
+            <p>Henüz yayında ilan bulunmuyor.</p>
           </div>
         ) : (
           <div className={styles.grid}>
-            {filteredListings.map((car) => {
+            {listings.slice(0, 6).map((car) => {
               const isFav = favorites.includes(car.id);
               const isCompared = !!compareList.find((c) => c.id === car.id);
               
               return (
-                <div className={styles.card} key={car.id}>
+                <Link href={`/cars/${car.id}`} className={styles.card} key={car.id}>
                   {/* Top Image Box */}
                   <div className={styles.imgBox}>
                     <span className={styles.featuredBadge}>ÖNE ÇIKAN</span>
-                    <img 
-                      src={getImageUrl(car.photos[0])} 
-                      alt={car.title} 
-                      className={styles.carImg}
-                    />
+                    <PhotoCarousel photos={car.photos} alt={car.title} imgClassName={styles.carImg} />
                     <div className={styles.priceTag}>
                       ${typeof car.price === 'number' ? car.price.toLocaleString() : car.price}
                     </div>
@@ -392,40 +267,26 @@ export default function Home() {
                     <h3 className={styles.carTitle}>{car.title}</h3>
                     
                     <div className={styles.location}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
+                      <MapPin size={12} />
                       <span>İstanbul, Türkiye</span>
                     </div>
 
                     {/* Specs Grid */}
                     <div className={styles.specsGrid}>
                       <div className={styles.specItem}>
-                        <svg className={styles.specIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 22h12M4 22V4a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v18M14 9h4a2 2 0 0 1 2 2v6" />
-                        </svg>
+                        <Fuel className={styles.specIcon} size={16} />
                         <span>{car.fuel || 'Benzin'}</span>
                       </div>
                       <div className={styles.specItem}>
-                        <svg className={styles.specIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 6v6l4 2" />
-                        </svg>
+                        <Gauge className={styles.specIcon} size={16} />
                         <span>{car.km ? `${car.km.toLocaleString()} km` : '35.000 km'}</span>
                       </div>
                       <div className={styles.specItem}>
-                        <svg className={styles.specIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="2" y="6" width="20" height="12" rx="2" />
-                          <path d="M12 6v12M2 12h20" />
-                        </svg>
+                        <Zap className={styles.specIcon} size={16} />
                         <span>{car.engineCapacity ? `${car.engineCapacity} cc` : '1800 cc'}</span>
                       </div>
                       <div className={styles.specItem}>
-                        <svg className={styles.specIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="3" />
-                          <path d="M12 2v7M12 15v7M2 12h7M15 12h7" />
-                        </svg>
+                        <Cog className={styles.specIcon} size={16} />
                         <span>{car.gear === 'Manuel' ? 'Manuel' : 'Otomatik'}</span>
                       </div>
                     </div>
@@ -435,27 +296,23 @@ export default function Home() {
                   <div className={styles.cardFooter}>
                     <span className={styles.dateText}>3 gün önce</span>
                     <div className={styles.footerActions}>
-                      <button 
-                        className={`${styles.actionBtn} ${isFav ? styles.favActive : ''}`} 
+                      <button
+                        className={`${styles.actionBtn} ${isFav ? styles.favActive : ''}`}
                         onClick={(e) => toggleFavorite(car.id, e)}
                         title="Favorilere Ekle"
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-                          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                        </svg>
+                        <Heart size={16} fill={isFav ? 'currentColor' : 'none'} />
                       </button>
-                      <button 
-                        className={`${styles.actionBtn} ${isCompared ? styles.compareActive : ''}`} 
+                      <button
+                        className={`${styles.actionBtn} ${isCompared ? styles.compareActive : ''}`}
                         onClick={(e) => toggleCompare(car, e)}
                         title="Karşılaştır"
                       >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M16 3h5v5M4 20L20 4M21 16v5h-5M4 4l16 16" />
-                        </svg>
+                        <ArrowLeftRight size={16} />
                       </button>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>
@@ -475,14 +332,14 @@ export default function Home() {
                 <div className={styles.drawerItem} key={c.id}>
                   <img src={getImageUrl(c.photos[0])} alt={c.title} className={styles.drawerItemImg} />
                   <span>{c.brand} {c.modelName}</span>
-                  <button className={styles.removeItemBtn} onClick={(e) => toggleCompare(c, e)}>✕</button>
+                  <button className={styles.removeItemBtn} onClick={(e) => toggleCompare(c, e)} aria-label="Karşılaştırmadan çıkar"><X size={12} /></button>
                 </div>
               ))}
             </div>
             <div className={styles.drawerActions}>
-              <button 
+              <button
                 className={styles.clearBtn}
-                onClick={() => { setCompareList([]); setShowCompareDrawer(false); }}
+                onClick={() => { setCompareList([]); saveCompareList([]); setShowCompareDrawer(false); }}
               >
                 Temizle
               </button>
@@ -503,7 +360,7 @@ export default function Home() {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3>Araç Teknik Karşılaştırması</h3>
-              <button className={styles.closeModalBtn} onClick={() => setShowCompareModal(false)}>✕</button>
+              <button className={styles.closeModalBtn} onClick={() => setShowCompareModal(false)} aria-label="Kapat"><X size={16} /></button>
             </div>
             <div className={styles.modalBody}>
               <table className={styles.compareTable}>

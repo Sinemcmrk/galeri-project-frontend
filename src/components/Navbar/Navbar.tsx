@@ -1,12 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Globe, User, LogOut, LogIn, UserPlus } from 'lucide-react';
 import styles from './Navbar.module.css';
+import { API_BASE_URL } from '@/lib/listings';
+import { clearSession, getSession, SessionUser } from '@/lib/auth';
 
 export const Navbar: React.FC = () => {
+  const router = useRouter();
   const [lang, setLang] = useState('TR');
   const [showLangDropdown, setShowLangDropdown] = useState(false);
+  const [currentUser, setCurrentUser] = useState<SessionUser | null>(null);
+
+  useEffect(() => {
+    setCurrentUser(getSession()?.user ?? null);
+  }, []);
+
+  const handleLogout = async () => {
+    const session = getSession();
+    clearSession();
+    setCurrentUser(null);
+    if (session) {
+      try {
+        await fetch(`${API_BASE_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.token}` },
+        });
+      } catch {
+        // Best-effort only; the client-side session is already cleared.
+      }
+    }
+    router.push('/');
+  };
 
   return (
     <header className={styles.header}>
@@ -19,11 +46,11 @@ export const Navbar: React.FC = () => {
             <Link href="/faq" className={styles.topLink}>SSS</Link>
             <span className={styles.divider}>|</span>
             <div className={styles.langSelector}>
-              <button 
+              <button
                 className={styles.langButton}
                 onClick={() => setShowLangDropdown(!showLangDropdown)}
               >
-                🌐 Dil: {lang}
+                <Globe size={14} /> Dil: {lang}
               </button>
               {showLangDropdown && (
                 <div className={styles.langDropdown}>
@@ -41,9 +68,21 @@ export const Navbar: React.FC = () => {
               <span>Destek Hattı:</span> <strong>555 222 333 444</strong>
             </div>
             <span className={styles.divider}>|</span>
-            <Link href="/login" className={styles.topLink}>🔑 Giriş Yap</Link>
-            <span className={styles.divider}>|</span>
-            <Link href="/register" className={styles.topLink}>👤 Kayıt Ol</Link>
+            {currentUser ? (
+              <>
+                <span className={styles.topLink}><User size={14} /> {currentUser.name || currentUser.email}</span>
+                <span className={styles.divider}>|</span>
+                <button type="button" onClick={handleLogout} className={styles.langButton}>
+                  <LogOut size={14} /> Çıkış Yap
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className={styles.topLink}><LogIn size={14} /> Giriş Yap</Link>
+                <span className={styles.divider}>|</span>
+                <Link href="/register" className={styles.topLink}><UserPlus size={14} /> Kayıt Ol</Link>
+              </>
+            )}
           </div>
         </div>
       </div>

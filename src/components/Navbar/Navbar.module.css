@@ -31,6 +31,9 @@
 }
 
 .topLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   color: #475569;
   transition: var(--transition);
 }

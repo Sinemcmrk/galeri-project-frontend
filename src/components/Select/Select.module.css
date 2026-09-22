@@ -1,0 +1,37 @@
+.wrapper {
+  position: relative;
+  width: 100%;
+  display: block;
+}
+
+/* !important here is deliberate: a page's own descendant selector (e.g.
+   ".formGroup select") can tie this rule's specificity, and cross-module
+   source order is not guaranteed — but the space reserved for the chevron
+   and the hidden native arrow are this component's structural contract,
+   not something a caller should ever need to override. */
+select.select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  width: 100% !important;
+  padding-right: 2.25rem !important;
+  cursor: pointer;
+}
+
+.chevron {
+  position: absolute;
+  top: 50%;
+  right: 0.85rem;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.select:focus + .chevron {
+  color: var(--accent-color);
+}
+
+.select:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

@@ -1,0 +1,82 @@
+.form {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.row input {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.row input:focus {
+  border-color: var(--accent-color);
+}
+
+.row button {
+  background-color: var(--accent-color);
+  color: #fff;
+  border: none;
+  padding: 0 1rem;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.row button:hover {
+  background-color: var(--accent-hover);
+}
+
+.row button:disabled {
+  background-color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.successText {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+  font-size: 0.85rem;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.errorText {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #991b1b;
+}
+
+.successText svg,
+.errorText svg {
+  flex-shrink: 0;
+}

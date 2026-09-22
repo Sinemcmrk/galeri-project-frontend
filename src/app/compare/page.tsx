@@ -2,54 +2,22 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ArrowLeftRight, X } from 'lucide-react';
 import styles from './compare.module.css';
-
-interface Listing {
-  id: string;
-  title: string;
-  price: number | string | null;
-  brand: string | null;
-  modelName: string | null;
-  year: number | null;
-  color: string | null;
-  fuel: string | null;
-  gear: string | null;
-  km: number | null;
-  enginePower: number | null;
-  engineCapacity: number | null;
-  bodyType: string | null;
-  photos: string[];
-}
+import { Listing, getImageUrl, getCompareList, saveCompareList } from '@/lib/listings';
 
 export default function ComparePage() {
   const [compareList, setCompareList] = useState<Listing[]>([]);
 
   useEffect(() => {
-    // Read active compare items from sessionStorage or page memory
-    // To share between home, catalog and compare page, we can use localStorage:
-    const saved = localStorage.getItem('local_compare_cars');
-    if (saved) {
-      try {
-        setCompareList(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    }
+    // Shared with the homepage, catalogue and detail pages via localStorage
+    setCompareList(getCompareList());
   }, []);
 
   const handleRemove = (id: string) => {
     const updated = compareList.filter(c => c.id !== id);
     setCompareList(updated);
-    localStorage.setItem('local_compare_cars', JSON.stringify(updated));
-  };
-
-  const getImageUrl = (photoPath: string | undefined) => {
-    if (!photoPath) return '/images/hero_bg.jpg';
-    if (photoPath.startsWith('/uploads/images/')) {
-      const filename = photoPath.replace('/uploads/images/', '');
-      return `/images/${filename}`;
-    }
-    return photoPath;
+    saveCompareList(updated);
   };
 
   return (
@@ -62,9 +30,7 @@ export default function ComparePage() {
       <div className={styles.content}>
         {compareList.length === 0 ? (
           <div className={styles.emptyState}>
-            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M16 3h5v5M4 20L20 4M21 16v5h-5M4 4l16 16" />
-            </svg>
+            <ArrowLeftRight size={56} strokeWidth={1.5} />
             <h2>Karşılaştırma Listeniz Boş</h2>
             <p>Kıyaslamak istediğiniz araçları katalog sayfamızdan ekleyebilirsiniz.</p>
             <Link href="/cars" className={styles.goBtn}>
@@ -79,7 +45,7 @@ export default function ComparePage() {
                   <th>Özellikler</th>
                   {compareList.map(c => (
                     <th key={c.id} className={styles.carHeader}>
-                      <button className={styles.removeBtn} onClick={() => handleRemove(c.id)}>✕</button>
+                      <button className={styles.removeBtn} onClick={() => handleRemove(c.id)} aria-label="Karşılaştırmadan çıkar"><X size={13} /></button>
                       <img src={getImageUrl(c.photos[0])} alt={c.title} className={styles.carImg} />
                       <h3>{c.title}</h3>
                     </th>

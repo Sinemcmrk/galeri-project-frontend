@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { Star } from 'lucide-react';
 import styles from './reviews.module.css';
 
 interface Review {
@@ -85,9 +86,7 @@ export default function ReviewsPage() {
 
   const renderStars = (count: number) => {
     return Array.from({ length: 5 }).map((_, i) => (
-      <span key={i} className={i < count ? styles.starFilled : styles.starEmpty}>
-        ★
-      </span>
+      <Star key={i} size={16} className={i < count ? styles.starFilled : styles.starEmpty} fill={i < count ? 'currentColor' : 'none'} />
     ));
   };
 
